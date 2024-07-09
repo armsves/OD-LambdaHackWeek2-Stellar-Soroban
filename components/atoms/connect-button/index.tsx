@@ -92,7 +92,7 @@ export const ConnectButton: React.FC = () => {
                             className={styles.button}
                             onClick={() => {
                                 setActivePubKey(null);
-                                setBalance(null);
+                                setBalance2(null);
                                 setDropdownOpen(false);
                             }}
                         >
