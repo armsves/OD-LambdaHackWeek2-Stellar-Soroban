@@ -1,20 +1,20 @@
-import React, { createContext, useContext, useState } from 'react'
+"use client"
+import React, { createContext, useState, useContext } from 'react';
 
-const AppContext = createContext({
-  walletAddress: '',
-  setWalletAddress: (value: any) => value,
-})
+const AppContext = createContext<any>(undefined);
 
-export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const [walletAddress, setWalletAddress] = useState('')
+export function AppWrapper({ children } : { children: React.ReactNode }) {
 
-  return (
-    <AppContext.Provider value={{ walletAddress, setWalletAddress }}>
-      {children}
-    </AppContext.Provider>
-  )
+    let [activePubKey, setActivePubKey] = useState<string | null>(null);
+    let [balance2, setBalance2] = useState<number | null>(null);
+
+    return (
+        <AppContext.Provider value={{activePubKey, setActivePubKey, balance2, setBalance2}}>
+            {children}
+        </AppContext.Provider>
+    )
+}   
+
+export function useAppContext() {
+    return useContext(AppContext);
 }
-
-export const useAppContext = () => useContext(AppContext)

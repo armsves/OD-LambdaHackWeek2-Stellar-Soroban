@@ -4,9 +4,34 @@ import { TransactionModal } from '../../molecules/transaction-modal'
 import { Utils } from '../../../shared/utils'
 import styles from './style.module.css'
 import { Spacer } from '../../atoms/spacer'
-import { abundance, crowdfund } from '../../../shared/contracts'
+import { abundance, crowdfund, server } from '../../../shared/contracts'
 import { signTransaction } from '@stellar/freighter-api'
-import { BASE_FEE, xdr } from '@stellar/stellar-sdk'
+import {
+  xdr, FeeBumpTransaction, Transaction,
+  Keypair,
+  Contract,
+  SorobanRpc,
+  TransactionBuilder,
+  Networks,
+  BASE_FEE,
+  nativeToScVal,
+  Address,
+} from '@stellar/stellar-sdk'
+import {
+  StellarWalletsKit,
+  WalletNetwork,
+  allowAllModules,
+  ISupportedWallet,
+  XBULL_ID,
+  FREIGHTER_ID,
+} from "@creit.tech/stellar-wallets-kit/build/index";
+import { useAppContext } from '../../../context/appContext'
+
+const kit: StellarWalletsKit = new StellarWalletsKit({
+  network: WalletNetwork.TESTNET,
+  selectedWalletId: FREIGHTER_ID,
+  modules: allowAllModules(),
+});
 
 export interface IFormPledgeProps {
   account: string
@@ -41,14 +66,59 @@ function MintButton({
 
   const displayAmount = 100
   const amount = BigInt(displayAmount * 10 ** decimals)
+  const { activePubKey, setActivePubKey } = useAppContext();
+  const StellarSdk = require("stellar-sdk");
+  const RPC_SERVER = "https://soroban-testnet.stellar.org/";
+
+  const signTx = async (tx) => {
+    console.log('tx', tx)
+    const signedXDR = await kit.signTx({
+      xdr: tx.toXDR(),
+      publicKeys: [activePubKey],
+      network: WalletNetwork.TESTNET,
+    });
+
+    return signedXDR.result;
+  }
 
   return (
     <Button
       title={`Mint ${displayAmount} ${symbol}`}
       onClick={async () => {
         setSubmitting(true)
-        const tx = await abundance.mint({ to: account, amount: amount })
-        await tx.signAndSend()
+
+        const server = new SorobanRpc.Server("https://soroban-testnet.stellar.org:443",);
+        const contractAddress = "CARKSRXI44GV5HP2IALCXRNJ6H6YZRXPI72UNNIIY7KEOYNP5ROH63NT";
+        const contract = new Contract(contractAddress);
+        const sourceAccount = await server.getAccount(activePubKey);
+        let builtTransaction = new TransactionBuilder(sourceAccount, {
+          fee: BASE_FEE,
+          networkPassphrase: Networks.TESTNET,
+        })
+          .addOperation(
+            contract.call(
+              "mint",
+              nativeToScVal(Address.fromString(activePubKey)),
+              nativeToScVal(amount, { type: "i128" }),
+            ),
+          )
+          .setTimeout(180)
+          .build();
+
+        console.log(`builtTransaction=${builtTransaction.toXDR()}`);
+        let preparedTransaction = await server.prepareTransaction(builtTransaction);
+        console.log('preparedTransaction',preparedTransaction.toXDR())
+        const signedXDR = await kit.signTx({
+          xdr: preparedTransaction.toXDR(),
+          publicKeys: [activePubKey],
+          network: WalletNetwork.TESTNET,
+        });
+
+        console.log('signedXDR',signedXDR.result)
+        const signedTx = TransactionBuilder.fromXDR(signedXDR.result, StellarSdk.Networks.TESTNET);
+        let sendResponse = await server.sendTransaction(signedTx);
+        console.log(`Sent transaction: ${JSON.stringify(sendResponse)}`);
+
         setSubmitting(false)
         onComplete()
       }}
@@ -67,6 +137,12 @@ const FormPledge: FunctionComponent<IFormPledgeProps> = props => {
   const [resultSubmit, setResultSubmit] = useState<IResultSubmit | undefined>()
   const [input, setInput] = useState('')
   const [isSubmitting, setSubmitting] = useState(false)
+  const { activePubKey, setActivePubKey } = useAppContext();
+  const StellarSdk = require("stellar-sdk");
+  //const server2 = new StellarSdk.Horizon.Server("https://horizon-testnet.stellar.org");
+
+  const RPC_SERVER = "https://soroban-testnet.stellar.org/";
+  const server2 = new SorobanRpc.Server(RPC_SERVER);
 
   React.useEffect(() => {
     Promise.all([
@@ -90,12 +166,47 @@ const FormPledge: FunctionComponent<IFormPledgeProps> = props => {
     setSubmitting(true)
 
     try {
+      ////
+
+      const server = new SorobanRpc.Server("https://soroban-testnet.stellar.org:443",);
+      const contractAddress = "CCKMR2MCVNOZHQKEKQX4RZKYA2A26Q6INXUW74XP3DN3DFU7IB7QFW7S";
+      const contract = new Contract(contractAddress);
+      const sourceAccount = await server.getAccount(activePubKey);
+      let builtTransaction = new TransactionBuilder(sourceAccount, {
+        fee: BASE_FEE,
+        networkPassphrase: Networks.TESTNET,
+      })
+        .addOperation(
+          contract.call(
+            "deposit",
+            nativeToScVal(Address.fromString(activePubKey)),
+            nativeToScVal(BigInt(amount * 10 ** decimals), { type: "i128" }),
+          ),
+        )
+        .setTimeout(180)
+        .build();
+
+      console.log(`builtTransaction=${builtTransaction.toXDR()}`);
+      let preparedTransaction = await server.prepareTransaction(builtTransaction);
+      console.log('preparedTransaction',preparedTransaction.toXDR())
+      const signedXDR = await kit.signTx({
+        xdr: preparedTransaction.toXDR(),
+        publicKeys: [activePubKey],
+        network: WalletNetwork.TESTNET,
+      });
+
+      console.log('signedXDR',signedXDR.result)
+      const signedTx = TransactionBuilder.fromXDR(signedXDR.result, StellarSdk.Networks.TESTNET);
+      let sendResponse = await server.sendTransaction(signedTx);
+      console.log(`Sent transaction: ${JSON.stringify(sendResponse)}`);
+
+      /////
+      /*
       const tx = await crowdfund.deposit({
         user: props.account,
         amount: BigInt(amount * 10 ** decimals),
       })
-      await tx.signAndSend()
-
+      */
       setResultSubmit({
         status: 'success',
         value: String(amount),

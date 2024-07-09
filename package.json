@@ -17,8 +17,11 @@
     "preinstall": "npm run build:contracts && npm run bindings"
   },
   "dependencies": {
+    "@creit.tech/stellar-wallets-kit": "^0.8.3",
+    "@fortawesome/free-solid-svg-icons": "^6.5.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@radix-ui/react-dialog": "1.1.1",
-    "@stellar/freighter-api": "^2.0.0",
+    "@stellar/design-system": "^2.0.0-beta.13",
     "@stellar/stellar-sdk": "^12.1.0",
     "abundance-token": "file:./.soroban-example-dapp/abundance-token",
     "axios": "^0.27.2",
@@ -28,7 +31,8 @@
     "moment": "^2.29.4",
     "next": "^14.2.4",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "stellar-sdk": "^12.1.0"
   },
   "devDependencies": {
     "@types/humanize-duration": "^3.27.4",

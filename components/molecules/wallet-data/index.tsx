@@ -10,13 +10,7 @@ export function WalletData() {
 
   return (
     <>
-      {mounted && account ? (
-        <div className={styles.displayData}>
-          <div className={styles.card}>{account.displayName}</div>
-        </div>
-      ) : (
-        <ConnectButton label="Connect Wallet" />
-      )}
+        <ConnectButton />
     </>
   )
 }

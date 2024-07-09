@@ -5,35 +5,37 @@ import styles from '../styles/Home.module.css'
 import { Campaign, Pledge } from '../components/organisms'
 import { WalletData } from '../components/molecules'
 import { StyleMode } from '../components/molecules'
+import { AppWrapper } from "../context/appContext"
 
 const Home: NextPage = () => {
   return (
     <>
-      <Head>
-        <title>
-          Crowdfund Template - An example of how to run a crowdfund campaign on
-          Soroban.
-        </title>
-        <meta
-          name="description"
-          content="An example of loading information from a stellar smart contract"
-        />
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+      <AppWrapper>
+        <Head>
+          <title>
+            Crowdfund Template - An example of how to run a crowdfund campaign on Soroban.
+          </title>
+          <meta
+            name="description"
+            content="An example of loading information from a stellar smart contract"
+          />
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
 
-      <header className={styles.header}>
-        <h3>Starfund</h3>
-        <div className={styles.componentsContainer}>
-          <WalletData />
-          <StyleMode />
-        </div>
-      </header>
-      <main className={styles.main}>
-        <div className={styles.content}>
-          <Campaign />
-          <Pledge />
-        </div>
-      </main>
+        <header className={styles.header}>
+          <h3>Starfund</h3>
+          <div className={styles.componentsContainer}>
+            <WalletData />
+            <StyleMode />
+          </div>
+        </header>
+        <main className={styles.main}>
+          <div className={styles.content}>
+            <Campaign />
+            <Pledge />
+          </div>
+        </main>
+      </AppWrapper>
     </>
   )
 }
